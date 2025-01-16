@@ -296,10 +296,10 @@ LogicalResult propagateTensorShardings(
   // `SourceShardingHandler`. Need to check for it here to avoid copying
   // `shardingProjection` when debugging is disabled.
   if (context->hasActionHandler()) {
-    context->executeAction<SourceShardingAction>(updateShardings,
-                                                 /*IRUnits=*/{op}, operands,
-                                                 results, mesh, shardingRule,
-                                                 shardingProjection);
+    context->executeAction<SourceShardingAction>(
+        updateShardings,
+        /*IRUnits=*/{op}, op, operands, results, mesh, shardingRule,
+        shardingProjection, anyUpdated);
   } else {
     updateShardings();
   }
@@ -638,7 +638,8 @@ void BasicPropagationPassImpl::runOnOperation() {
   MLIRContext& context = getContext();
 
   // Prepare debugging handler for sharding origins and edge sources.
-  ShardingDebugMappings mappings(debugShardingOrigins, debugEdgeSourceSharding);
+  ShardingDebugMappings mappings(debugShardingOrigins,
+                                 debugPropagationEdgeSharding);
   SourceShardingHandler handler(&mappings);
   handler.prepareHandler(moduleOp);
 
@@ -672,7 +673,7 @@ void BasicPropagationPassImpl::setPropagationOptions(
   dumpDirectory = options.dumpDirectory.str();
   conservativePropagation = options.conservativePropagation;
   debugShardingOrigins = options.debugShardingOrigins;
-  debugEdgeSourceSharding = options.debugEdgeSourceSharding;
+  debugPropagationEdgeSharding = options.debugPropagationEdgeSharding;
 }
 
 std::unique_ptr<Pass> createBasicPropagationPass(
