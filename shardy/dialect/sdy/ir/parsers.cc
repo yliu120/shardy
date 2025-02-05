@@ -333,6 +333,11 @@ ParseResult parseNeedReplicationFactors(
                               "need_replication");
 }
 
+ParseResult parseSizeMismatchFactors(
+    AsmParser& parser, SmallVector<int64_t>& sizeMismatchFactors) {
+  return parseFactorsWithType(parser, sizeMismatchFactors, "size_mismatch");
+}
+
 ParseResult parseIsCustomRule(AsmParser& parser, bool& isCustomRule) {
   isCustomRule = false;
   if (!parser.parseOptionalComma()) {

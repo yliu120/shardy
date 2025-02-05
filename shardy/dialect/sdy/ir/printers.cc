@@ -101,6 +101,11 @@ void printNeedReplicationFactors(AsmPrinter& printer,
                               "need_replication");
 }
 
+void printSizeMismatchFactors(AsmPrinter& printer,
+                              ArrayRef<int64_t> sizeMismatchFactors) {
+  return printFactorsWithType(printer, sizeMismatchFactors, "size_mismatch");
+}
+
 void printIsCustomRule(AsmPrinter& printer, bool isCustomRule) {
   if (isCustomRule) {
     printer << ", custom";

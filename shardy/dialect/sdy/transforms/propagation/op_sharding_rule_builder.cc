@@ -117,7 +117,7 @@ OpShardingRuleAttr OpShardingRuleBuilder::build() {
 
   auto result = OpShardingRuleAttr::get(
       context, factorSizes, operandMappingAttrs, resultMappingAttrs,
-      reductionFactors, needReplicationFactors);
+      reductionFactors, needReplicationFactors, sizeMismatchFactors);
 
   // Erase all added factors, to return the builder to its original state before
   // calling this method.
@@ -152,6 +152,9 @@ void OpShardingRuleBuilder::updateFactorType(FactorType factorType,
       return;
     case FactorType::kNeedReplication:
       needReplicationFactors.push_back(factorIndex);
+      return;
+    case FactorType::kSizeMismatch:
+      sizeMismatchFactors.push_back(factorIndex);
       return;
     case FactorType::kDefault:
       return;

@@ -80,10 +80,11 @@ class DialectTest : public ::testing::Test {
       ArrayRef<TensorMappingAttr> resultMappings,
       ArrayRef<int64_t> reductionFactors = {},
       ArrayRef<int64_t> needReplicationFactors = {},
-      bool isCustomRule = false) {
+      ArrayRef<int64_t> sizeMismatchFactors = {}, bool isCustomRule = false) {
     return OpShardingRuleAttr::get(&context, factorSizes, operandMappings,
                                    resultMappings, reductionFactors,
-                                   needReplicationFactors, isCustomRule);
+                                   needReplicationFactors, sizeMismatchFactors,
+                                   isCustomRule);
   }
 
   MLIRContext context;
@@ -648,6 +649,7 @@ TEST_F(DialectTest, OpShardingRuleAttrElementWiseOperation) {
   auto verifyBatchingFactor = [&](int64_t factorIndex) {
     EXPECT_FALSE(rule.isReductionFactor(factorIndex));
     EXPECT_FALSE(rule.isNeedReplicationFactor(factorIndex));
+    EXPECT_FALSE(rule.isSizeMismatchFactor(factorIndex));
     EXPECT_TRUE(rule.isFactorInAllNonScalarTensors(factorIndex));
     EXPECT_TRUE(rule.isBatchingFactor(factorIndex));
   };
@@ -676,12 +678,14 @@ TEST_F(DialectTest, OpShardingRuleAttrDotGeneralOperation) {
   // Verify the first factor is a batching factor.
   EXPECT_FALSE(rule.isReductionFactor(0));
   EXPECT_FALSE(rule.isNeedReplicationFactor(0));
+  EXPECT_FALSE(rule.isSizeMismatchFactor(0));
   EXPECT_TRUE(rule.isFactorInAllNonScalarTensors(0));
   EXPECT_TRUE(rule.isBatchingFactor(0));
 
   auto verifyNonContractingDimension = [&](int64_t factorIndex) {
     EXPECT_FALSE(rule.isReductionFactor(factorIndex));
     EXPECT_FALSE(rule.isNeedReplicationFactor(factorIndex));
+    EXPECT_FALSE(rule.isSizeMismatchFactor(factorIndex));
     EXPECT_FALSE(rule.isFactorInAllNonScalarTensors(factorIndex));
     EXPECT_FALSE(rule.isBatchingFactor(factorIndex));
   };
@@ -691,6 +695,7 @@ TEST_F(DialectTest, OpShardingRuleAttrDotGeneralOperation) {
   // Verify the contracting dimension is a reduction factor.
   EXPECT_TRUE(rule.isReductionFactor(3));
   EXPECT_FALSE(rule.isNeedReplicationFactor(3));
+  EXPECT_FALSE(rule.isSizeMismatchFactor(3));
   EXPECT_FALSE(rule.isFactorInAllNonScalarTensors(3));
   EXPECT_FALSE(rule.isBatchingFactor(3));
 }
@@ -715,12 +720,14 @@ TEST_F(DialectTest, OpShardingRuleAttrDynamicSlice) {
   // Verify the first factor is a batching factor.
   EXPECT_FALSE(rule.isReductionFactor(0));
   EXPECT_FALSE(rule.isNeedReplicationFactor(0));
+  EXPECT_FALSE(rule.isSizeMismatchFactor(0));
   EXPECT_TRUE(rule.isFactorInAllNonScalarTensors(0));
   EXPECT_TRUE(rule.isBatchingFactor(0));
 
   auto verifyNonBatchingFactor = [&](int64_t factorIndex) {
     EXPECT_FALSE(rule.isReductionFactor(factorIndex));
     EXPECT_FALSE(rule.isNeedReplicationFactor(factorIndex));
+    EXPECT_FALSE(rule.isSizeMismatchFactor(factorIndex));
     EXPECT_FALSE(rule.isFactorInAllNonScalarTensors(factorIndex));
     EXPECT_FALSE(rule.isBatchingFactor(factorIndex));
   };

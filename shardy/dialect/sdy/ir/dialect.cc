@@ -931,6 +931,10 @@ bool OpShardingRuleAttr::isNeedReplicationFactor(int64_t factorIndex) const {
   return llvm::is_contained(getNeedReplicationFactors(), factorIndex);
 }
 
+bool OpShardingRuleAttr::isSizeMismatchFactor(int64_t factorIndex) const {
+  return llvm::is_contained(getSizeMismatchFactors(), factorIndex);
+}
+
 bool OpShardingRuleAttr::isFactorInAllNonScalarTensors(
     int64_t factorIndex) const {
   for (const TensorMappingAttr& tensorMapping :
@@ -950,6 +954,7 @@ bool OpShardingRuleAttr::isFactorInAllNonScalarTensors(
 bool OpShardingRuleAttr::isBatchingFactor(int64_t factorIndex) const {
   return !isReductionFactor(factorIndex) &&
          !isNeedReplicationFactor(factorIndex) &&
+         !isSizeMismatchFactor(factorIndex) &&
          isFactorInAllNonScalarTensors(factorIndex);
 }
 

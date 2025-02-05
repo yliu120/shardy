@@ -48,6 +48,11 @@ void printReductionFactors(AsmPrinter& printer,
 void printNeedReplicationFactors(AsmPrinter& printer,
                                  ArrayRef<int64_t> needReplicationFactors);
 
+// Prints the factors corresponding to multiple sizes of an OpShardingRule.
+// Given a vector [0, 2], we print `size_mismatch={i, k}`.
+void printSizeMismatchFactors(AsmPrinter& printer,
+                              ArrayRef<int64_t> sizeMismatchFactors);
+
 void printIsCustomRule(AsmPrinter& printer, bool isCustomRule);
 
 // Prints a single block region without the block id, for example:

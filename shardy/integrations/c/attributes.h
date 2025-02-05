@@ -202,6 +202,7 @@ MLIR_CAPI_EXPORTED MlirAttribute sdyOpShardingRuleAttrGet(
     intptr_t nResultMappings, const MlirAttribute* resultMappings,
     intptr_t nReductionFactors, const int64_t* reductionFactors,
     intptr_t nNeedReplicationFactors, const int64_t* needReplicationFactors,
+    intptr_t nSizeMismatchFactors, const int64_t* sizeMismatchFactors,
     bool isCustomRule);
 
 MLIR_CAPI_EXPORTED bool sdyOpShardingRuleAttrGetIsCustom(MlirAttribute attr);
@@ -234,6 +235,12 @@ MLIR_CAPI_EXPORTED intptr_t
 sdyOpShardingRuleAttrGetNeedReplicationFactorsSize(MlirAttribute attr);
 
 MLIR_CAPI_EXPORTED int64_t sdyOpShardingRuleAttrGetNeedReplicationFactorsElem(
+    MlirAttribute attr, intptr_t pos);
+
+MLIR_CAPI_EXPORTED intptr_t
+sdyOpShardingRuleAttrGetSizeMismatchFactorsSize(MlirAttribute attr);
+
+MLIR_CAPI_EXPORTED int64_t sdyOpShardingRuleAttrGetSizeMismatchFactorsElem(
     MlirAttribute attr, intptr_t pos);
 
 //===----------------------------------------------------------------------===//

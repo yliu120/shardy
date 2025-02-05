@@ -48,6 +48,11 @@ ParseResult parseReductionFactors(AsmParser& parser,
 ParseResult parseNeedReplicationFactors(
     AsmParser& parser, SmallVector<int64_t>& needReplicationFactors);
 
+// Parses the factors corresponding to multiple sizes of an OpShardingRule. We
+// expect to parse `size_mismatch={i, k}` into a vector [0, 2].
+ParseResult parseSizeMismatchFactors(AsmParser& parser,
+                                     SmallVector<int64_t>& sizeMismatchFactors);
+
 ParseResult parseIsCustomRule(AsmParser& parser, bool& isCustomRule);
 
 // Parses a single block region without the block id. This is an example of what

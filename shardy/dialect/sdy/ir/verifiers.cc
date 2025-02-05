@@ -610,6 +610,7 @@ LogicalResult verifyOpShardingRuleAttr(OpShardingRuleAttr shardingRule,
   ArrayRef<int64_t> reductionFactors = shardingRule.getReductionFactors();
   ArrayRef<int64_t> needReplicationFactors =
       shardingRule.getNeedReplicationFactors();
+  ArrayRef<int64_t> sizeMismatchFactors = shardingRule.getSizeMismatchFactors();
 
   if (failed(verifyIndicesOfSpecialFactors(op, shardingRule.getNumFactors(),
                                            reductionFactors))) {
@@ -619,15 +620,26 @@ LogicalResult verifyOpShardingRuleAttr(OpShardingRuleAttr shardingRule,
                                            needReplicationFactors))) {
     return failure();
   }
+  if (failed(verifyIndicesOfSpecialFactors(op, shardingRule.getNumFactors(),
+                                           sizeMismatchFactors))) {
+    return failure();
+  }
 
-  SmallVector<int64_t> intersection;
-  std::set_intersection(reductionFactors.begin(), reductionFactors.end(),
-                        needReplicationFactors.begin(),
-                        needReplicationFactors.end(),
-                        std::back_inserter(intersection));
-  if (!intersection.empty()) {
+  SmallDenseSet<int64_t> specialFactors;
+  for (int64_t factor : reductionFactors) {
+    specialFactors.insert(factor);
+  }
+  for (int64_t factor : needReplicationFactors) {
+    specialFactors.insert(factor);
+  }
+  for (int64_t factor : sizeMismatchFactors) {
+    specialFactors.insert(factor);
+  }
+  if (specialFactors.size() != reductionFactors.size() +
+                                   needReplicationFactors.size() +
+                                   sizeMismatchFactors.size()) {
     return op->emitOpError(
-        "reduction and need_replication factors must be disjoint");
+        "a factor can only be in one of the special factor sets");
   }
 
   return success();
