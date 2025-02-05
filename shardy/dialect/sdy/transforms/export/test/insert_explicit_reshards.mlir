@@ -1163,7 +1163,8 @@ func.func @while(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"
   %c_0 = stablehlo.constant dense<1> : tensor<i32>
   %c_1 = stablehlo.constant dense<32> : tensor<i32>
   %c_2 = stablehlo.constant dense<0.0> : tensor<f32>
-  // TODO(enver): Reshard input to [y].
+  // CHECK: %[[RESHARD:.*]] = sdy.reshard %arg0 <@mesh, [{"y"}]> : tensor<210xf32>
+  // CHECK-NEXT stablehlo.while(%iterArg = %[[RESHARD]], %iterArg_2 = %c)
   %0:2 = stablehlo.while(%iterArg = %arg0, %iterArg_2 = %c) : tensor<210xf32>, tensor<i32> attributes {sdy.sharding = #sdy.sharding_per_value<[<@mesh, [{"y"}]>, <@mesh, []>]>}
     cond {
     %2 = stablehlo.compare  LT, %iterArg_2, %c_1 : (tensor<i32>, tensor<i32>) -> tensor<i1>
@@ -1177,7 +1178,8 @@ func.func @while(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"
     // CHECK-NEXT: stablehlo.negate %[[RESHARD]]
     %3 = stablehlo.negate %iterArg {sdy.sharding= #sdy.sharding_per_value<[<@mesh, [{"x"}]>]>} : tensor<210xf32>
     %4 = stablehlo.add %3, %3 {sdy.sharding = #sdy.sharding_per_value<[<@mesh, [{"x"}]>]>}: tensor<210xf32>
-    // TODO(enver): Reshard input to [y].
+    // CHECK: %[[RESHARD:.*]] = sdy.reshard %{{.*}} <@mesh, [{"y"}]> : tensor<210xf32>
+    // CHECK-NEXT: stablehlo.return %[[RESHARD]], %{{.*}} : tensor<210xf32>, tensor<i32>
     stablehlo.return %4, %2 : tensor<210xf32>, tensor<i32>
   }
   %1 = stablehlo.negate %0#0 {sdy.sharding= #sdy.sharding_per_value<[<@mesh, [{"y"}]>]>} : tensor<210xf32>
@@ -1190,7 +1192,8 @@ func.func @while_missing_sharding(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sh
   %c_0 = stablehlo.constant dense<1> : tensor<i32>
   %c_1 = stablehlo.constant dense<32> : tensor<i32>
   %c_2 = stablehlo.constant dense<0.0> : tensor<f32>
-  // TODO(enver): Reshard input to [].
+  // CHECK: %[[RESHARD:.*]] = sdy.reshard %arg0 <@mesh, [{}]> : tensor<210xf32>
+  // CHECK-NEXT stablehlo.while(%iterArg = %[[RESHARD]], %iterArg_2 = %c)
   %0:2 = stablehlo.while(%iterArg = %arg0, %iterArg_2 = %c) : tensor<210xf32>, tensor<i32>
     cond {
     %2 = stablehlo.compare  LT, %iterArg_2, %c_1 : (tensor<i32>, tensor<i32>) -> tensor<i1>
@@ -1204,7 +1207,8 @@ func.func @while_missing_sharding(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sh
     // CHECK-NEXT: stablehlo.negate %[[RESHARD]]
     %3 = stablehlo.negate %iterArg {sdy.sharding= #sdy.sharding_per_value<[<@mesh, [{"x"}]>]>} : tensor<210xf32>
     %4 = stablehlo.add %3, %3 {sdy.sharding = #sdy.sharding_per_value<[<@mesh, [{"x"}]>]>}: tensor<210xf32>
-    // TODO(enver): Reshard block result to [].
+    // CHECK: %[[RESHARD:.*]] = sdy.reshard %{{.*}} <@mesh, [{}]> : tensor<210xf32>
+    // CHECK-NEXT: stablehlo.return %[[RESHARD]], %{{.*}} : tensor<210xf32>, tensor<i32>
     stablehlo.return %4, %2 : tensor<210xf32>, tensor<i32>
   }
   %1 = stablehlo.negate %0#0 : tensor<210xf32>
@@ -1217,7 +1221,8 @@ func.func @case(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"x
     // CHECK: %[[RESHARD:.*]] = sdy.reshard %arg0 <@mesh, [{"x"}]> : tensor<210xf32>
     // CHECK-NEXT: stablehlo.abs %[[RESHARD]]
     %2 = stablehlo.abs %arg0 {sdy.sharding=#sdy.sharding_per_value<[<@mesh, [{"x"}]>]>} : tensor<210xf32>
-    // TODO(enver): Reshard block result to [y].
+    // CHECK: %[[RESHARD:.*]] = sdy.reshard %{{.*}} <@mesh, [{"y"}]> : tensor<210xf32>
+    // CHECK-NEXT: stablehlo.return %[[RESHARD]] : tensor<210xf32>
     stablehlo.return %2 : tensor<210xf32>
   }, {
     %2 = stablehlo.cosine %arg0 {sdy.sharding=#sdy.sharding_per_value<[<@mesh, [{"y"}]>]>} : tensor<210xf32>
@@ -1227,7 +1232,8 @@ func.func @case(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"x
     stablehlo.return %3 : tensor<210xf32>
   }, {
     %2 = stablehlo.abs %arg0 {sdy.sharding=#sdy.sharding_per_value<[<@mesh, [{"x":(1)2}]>]>} : tensor<210xf32>
-    // TODO(enver): Reshard block result to [y].
+    // CHECK: %[[RESHARD:.*]] = sdy.reshard %{{.*}} <@mesh, [{"y"}]> : tensor<210xf32>
+    // CHECK-NEXT: stablehlo.return %[[RESHARD]] : tensor<210xf32>
     stablehlo.return %2 : tensor<210xf32>
   }) {sdy.sharding = #sdy.sharding_per_value<[<@mesh, [{"y"}]>]>} : (tensor<i32>) -> tensor<210xf32>
   %1 = stablehlo.negate %0 {sdy.sharding= #sdy.sharding_per_value<[<@mesh, [{"y"}]>]>} : tensor<210xf32>
@@ -1236,10 +1242,12 @@ func.func @case(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"x
 
 // CHECK-LABEL: func @named_computation
 func.func @named_computation(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"x":(1)2}]>}) -> (tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"y"}]>}) {
-  // TODO(enver): Reshard input to [x].
+  // CHECK: %[[RESHARD:.*]] = sdy.reshard %arg0 <@mesh, [{"x"}]> : tensor<210xf32>
+  // CHECK-NEXT: sdy.named_computation<"foo">(%[[RESHARD]])
   %0 = sdy.named_computation<"foo">(%arg0) in_shardings=[<@mesh, [{"x"}]>] out_shardings=[<@mesh, [{"y"}]>] (%arg1: tensor<210xf32>) {
     %2 = stablehlo.abs %arg1 {sdy.sharding=#sdy.sharding_per_value<[<@mesh, [{"x"}]>]>} : tensor<210xf32>
-    // TODO(enver): Reshard block result to [y].
+    // CHECK: %[[RESHARD:.*]] = sdy.reshard %{{.*}} <@mesh, [{"y"}]> : tensor<210xf32>
+    // CHECK-NEXT: sdy.return %[[RESHARD]] : tensor<210xf32>
     sdy.return %2 : tensor<210xf32>
   } : (tensor<210xf32>) -> (tensor<210xf32>)
   %1 = stablehlo.negate %0 {sdy.sharding= #sdy.sharding_per_value<[<@mesh, [{"y"}]>]>} : tensor<210xf32>
@@ -1259,11 +1267,13 @@ func.func @named_computation_empty_block(%arg0: tensor<210xf32> {sdy.sharding = 
 
 // CHECK-LABEL: func @manual_computation
 func.func @manual_computation(%arg0: tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"x":(1)2}]>}) -> (tensor<210xf32> {sdy.sharding = #sdy.sharding<@mesh, [{"y"}]>}) {
-  // TODO(enver): Reshard input to [x].
+  // CHECK: %[[RESHARD:.*]] = sdy.reshard %arg0 <@mesh, [{"x"}]> : tensor<210xf32>
+  // CHECK-NEXT: sdy.manual_computation(%[[RESHARD]])
   %0 = sdy.manual_computation(%arg0)
     in_shardings=[<@mesh, [{"x"}]>] out_shardings=[<@mesh, [{"y"}]>] manual_axes={} (%arg1: tensor<210xf32>) {
     %2 = stablehlo.abs %arg1 {sdy.sharding=#sdy.sharding_per_value<[<@mesh, [{"x"}]>]>} : tensor<210xf32>
-    // TODO(enver): Reshard block result to [y].
+    // CHECK: %[[RESHARD:.*]] = sdy.reshard %{{.*}} <@mesh, [{"y"}]> : tensor<210xf32>
+    // CHECK-NEXT: sdy.return %[[RESHARD]] : tensor<210xf32>
     sdy.return %2 : tensor<210xf32>
   } : (tensor<210xf32>) -> (tensor<210xf32>)
   %1 = stablehlo.negate %0 {sdy.sharding= #sdy.sharding_per_value<[<@mesh, [{"y"}]>]>} : tensor<210xf32>

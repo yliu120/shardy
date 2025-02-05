@@ -653,6 +653,34 @@ struct InsertExplicitReshardsPass
         return;
       }
 
+      if (isa<mlir::sdy::ShardableDataFlowOpInterface>(op)) {
+        auto shardableDataFlowOp = dyn_cast<ShardableDataFlowOpInterface>(op);
+        for (Value target : llvm::concat<Value>(
+                 shardableDataFlowOp.getOpResultEdgeOwners(),
+                 shardableDataFlowOp.getBlockArgumentEdgeOwners())) {
+          TensorShardingAttr targetSharding =
+              shardableDataFlowOp.getEdgeOwnerSharding(target);
+          for (Value source : shardableDataFlowOp.getEdgeSources(target)) {
+            TensorShardingAttr sourceSharding = getOrCreateSharding(
+                source, *meshName, /*closedIfMissing=*/true);
+            if (isFullyReplicated(sourceSharding) &&
+                isFullyReplicated(targetSharding)) {
+              continue;
+            }
+            if (targetSharding != sourceSharding) {
+              rewriter.setInsertionPointAfterValue(source);
+              auto reshardOp = rewriter.create<ReshardOp>(
+                  source.getLoc(), source,
+                  targetSharding
+                      ? targetSharding
+                      : TensorShardingAttr::getFullyClosedLike(sourceSharding));
+              rewriter.replaceAllUsesExcept(source, reshardOp, reshardOp);
+            }
+          }
+        }
+        return;
+      }
+
       // NOTE: Creating a sharding rule requires data flow edges are present.
       OpShardingRuleAttr shardingRule =
           getOrCreateShardingRule(op, /*conservativePropagation=*/false,
