@@ -410,6 +410,9 @@ OpShardingRuleAttr createOpShardingRule(Operation* op,
             callTargetName == "LayoutConstraint" ||
             callTargetName == "MoveToDevice" ||
             callTargetName == "MoveToHost" || callTargetName == "mhlo.erf" ||
+            callTargetName == "xla.gpu.send" ||
+            callTargetName == "xla.gpu.recv" ||
+            callTargetName == "xla.gpu.zeros" ||
             callTargetName == "X64Combine") {
           return OpShardingRuleBuilder::buildPointwise(customCall);
         }
